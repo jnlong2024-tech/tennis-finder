@@ -5,282 +5,355 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>网球场地搜索 | Tennis Court Finder</title>
 
-<!-- e469d71b1acdcc134ef2e6ca1a94757d-->
+<!--
+  ⚠️ 使用前请替换以下两处：
+  1. YOUR_SECURITY_CODE → 你的高德安全密钥
+  2. YOUR_API_KEY       → 你的高德 JS API Key
+-->
 <script>
 window._AMapSecurityConfig = {
-  securityJsCode: 'YOUR_SECURITY_CODE'
+  securityJsCode: 'e469d71b1acdcc134ef2e6ca1a94757d'
 }
 </script>
-
-<!--78633132e896679bab70212f1aa966e6-->
-<script src="https://webapi.amap.com/maps?v=2.0&key=YOUR_API_KEY&plugin=AMap.PlaceSearch,AMap.Geolocation,AMap.CitySearch"></script>
+<script src="https://webapi.amap.com/maps?v=2.0&key=78633132e896679bab70212f1aa966e6&plugin=AMap.PlaceSearch,AMap.Geolocation,AMap.CitySearch"></script>
 
 <style>
-body{
-  margin:0;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-  background:#0f172a;
-  color:#fff;
-}
-.container{
-  max-width:900px;
-  margin:0 auto;
-  padding:20px;
-}
-h1{
-  text-align:center;
-  margin:30px 0 10px;
-}
-.search-box{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-input{
-  flex:1;
-  padding:12px;
-  border-radius:8px;
-  border:none;
-}
-button{
-  padding:12px 20px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-}
-.locate{background:#2563eb;color:#fff;}
-.search{background:#f59e0b;color:#000;}
-.status{
-  margin:10px 0;
-  font-size:14px;
-  opacity:0.8;
-}
-#map{
-  width:100%;
-  height:300px;
-  border-radius:12px;
-  margin:20px 0;
-}
-.card{
-  background:#1e293b;
-  padding:15px;
-  border-radius:12px;
-  margin-bottom:12px;
-}
-.distance{
-  color:#f59e0b;
-  font-weight:bold;
-}
-.nav-btn{
-  margin-top:8px;
-  display:inline-block;
-  padding:6px 10px;
-  background:#334155;
-  border-radius:6px;
-  cursor:pointer;
-}
-.empty{
-  text-align:center;
-  opacity:0.5;
-  padding:40px 0;
-}
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, sans-serif;
+    background: #0f172a;
+    color: #fff;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  h1 {
+    text-align: center;
+    margin: 30px 0 20px;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+  }
+
+  .search-box {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  input {
+    flex: 1;
+    min-width: 160px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: #1e293b;
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: #f59e0b; }
+  input::placeholder { color: #64748b; }
+
+  button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: opacity 0.2s, transform 0.1s;
+    white-space: nowrap;
+  }
+  button:hover  { opacity: 0.85; }
+  button:active { transform: scale(0.97); }
+
+  .btn-locate { background: #2563eb; color: #fff; }
+  .btn-search { background: #f59e0b; color: #000; }
+
+  .status {
+    margin: 12px 0 4px;
+    font-size: 13px;
+    color: #94a3b8;
+    min-height: 18px;
+  }
+
+  #map {
+    width: 100%;
+    height: 320px;
+    border-radius: 12px;
+    margin: 16px 0;
+    background: #1e293b;
+    overflow: hidden;
+  }
+
+  .card {
+    background: #1e293b;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #334155;
+    line-height: 1.8;
+  }
+  .card strong { font-size: 15px; }
+  .card .addr  { color: #94a3b8; font-size: 13px; }
+
+  .distance {
+    color: #f59e0b;
+    font-weight: bold;
+    font-size: 13px;
+  }
+
+  .nav-btn {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 6px 14px;
+    background: #334155;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s;
+  }
+  .nav-btn:hover { background: #475569; }
+
+  .empty {
+    text-align: center;
+    color: #475569;
+    padding: 50px 0;
+    font-size: 15px;
+  }
+
+  .results-header {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 10px;
+  }
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<h1>🎾 网球场地搜索</h1>
+  <h1>🎾 网球场地搜索</h1>
 
-<div class="search-box">
-  <input id="cityInput" placeholder="输入城市，例如：北京" />
-  <button class="locate" onclick="getLocation()">📍 自动定位</button>
-  <button class="search" onclick="searchCity()">搜索</button>
-</div>
+  <div class="search-box">
+    <input id="cityInput" placeholder="输入城市，例如：北京" />
+    <button class="btn-locate" onclick="getLocation()">📍 自动定位</button>
+    <button class="btn-search" onclick="searchCity()">搜索</button>
+  </div>
 
-<div id="status" class="status">
-  请输入城市或点击自动定位
-</div>
+  <div id="status" class="status">请输入城市或点击自动定位</div>
 
-<div id="map"></div>
+  <div id="map"></div>
 
-<div id="result">
-  <div class="empty">暂无数据</div>
-</div>
+  <div id="result"><div class="empty">暂无数据</div></div>
 
 </div>
 
 <script>
 let map = null
 let markers = []
-let allData = []
 
-function setStatus(msg){
-  document.getElementById("status").innerText = msg
+// HTML 转义，防 XSS
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
 }
 
-function initMap(center){
-  if(!map){
-    map = new AMap.Map('map',{
-      zoom:13,
-      center:center,
-      mapStyle:'amap://styles/dark'
+function setStatus(msg) {
+  document.getElementById('status').textContent = msg
+}
+
+function initMap(center) {
+  if (!map) {
+    map = new AMap.Map('map', {
+      zoom: 13,
+      center: center,
+      mapStyle: 'amap://styles/dark'
     })
-  }else{
+  } else {
     map.setCenter(center)
+    map.setZoom(13)
   }
 }
 
-function clearMarkers(){
-  markers.forEach(m=>m.setMap(null))
-  markers=[]
+function clearMarkers() {
+  markers.forEach(m => m.setMap(null))
+  markers = []
 }
 
-function getLocation(){
-  setStatus("正在获取GPS定位...")
+function getLocation() {
+  setStatus('正在获取 GPS 定位…')
 
-  AMap.plugin('AMap.Geolocation',function(){
+  AMap.plugin('AMap.Geolocation', function () {
     const geo = new AMap.Geolocation({
-      enableHighAccuracy:true,
-      timeout:8000
+      enableHighAccuracy: true,
+      timeout: 8000
     })
 
-    geo.getCurrentPosition(function(status,result){
-      if(status==="complete"){
+    geo.getCurrentPosition(function (status, result) {
+      if (status === 'complete') {
         const lng = result.position.lng
         const lat = result.position.lat
-        const city = result.addressComponent.city || result.addressComponent.province
-
-        document.getElementById("cityInput").value = city
-        setStatus("GPS定位成功："+city)
-
-        initMap([lng,lat])
-        searchNearby([lng,lat])
-      }else{
-        console.warn("GPS失败，启用IP定位",result)
+        // 直辖市 city 字段为空，降级取 province
+        const city = (result.addressComponent && (result.addressComponent.city || result.addressComponent.province)) || ''
+        document.getElementById('cityInput').value = city
+        setStatus('GPS 定位成功：' + city)
+        initMap([lng, lat])
+        searchNearby([lng, lat])
+      } else {
+        console.warn('GPS 失败，启用 IP 定位', result)
         ipLocate()
       }
     })
   })
 }
 
-function ipLocate(){
-  setStatus("GPS失败，尝试IP定位...")
+function ipLocate() {
+  setStatus('GPS 失败，尝试 IP 定位…')
 
-  AMap.plugin('AMap.CitySearch',function(){
+  AMap.plugin('AMap.CitySearch', function () {
     const cs = new AMap.CitySearch()
-    cs.getLocalCity(function(status,result){
-      if(status==="complete" && result.city){
-        document.getElementById("cityInput").value = result.city
-        setStatus("IP定位成功："+result.city)
+    cs.getLocalCity(function (status, result) {
+      if (status === 'complete' && result && result.city) {
+        document.getElementById('cityInput').value = result.city
+        setStatus('IP 定位成功：' + result.city)
         searchCity()
-      }else{
-        setStatus("定位失败，请手动输入城市")
+      } else {
+        setStatus('定位失败，请手动输入城市后搜索')
       }
     })
   })
 }
 
-function searchCity(){
-  const city = document.getElementById("cityInput").value.trim()
-  if(!city){
-    setStatus("请输入城市")
+function searchCity() {
+  const city = document.getElementById('cityInput').value.trim()
+  if (!city) {
+    setStatus('请输入城市名')
     return
   }
-  setStatus("正在搜索 "+city+" 的网球场...")
-  doSearch({city:city})
+  setStatus('正在搜索「' + city + '」的网球场…')
+  doSearch({ city: city })
 }
 
-function searchNearby(center){
-  setStatus("正在搜索附近网球场...")
-  doSearch({location:center,radius:5000})
+function searchNearby(center) {
+  setStatus('正在搜索附近网球场…')
+  doSearch({ location: center, radius: 5000 })
 }
 
-function doSearch(options){
-  AMap.plugin('AMap.PlaceSearch',function(){
+function doSearch(options) {
+  AMap.plugin('AMap.PlaceSearch', function () {
+    const psOptions = { pageSize: 20, pageIndex: 1 }
+    // 按城市搜索时才传 city，避免附近搜索被城市范围限制
+    if (options.city) psOptions.city = options.city
 
-    const ps = new AMap.PlaceSearch({
-      pageSize:20,
-      pageIndex:1,
-      city:options.city || ""
-    })
+    const ps = new AMap.PlaceSearch(psOptions)
 
-    const callback = function(status,result){
-      if(status==="complete" && result.poiList && result.poiList.pois.length>0){
+    const callback = function (status, result) {
+      if (
+        status === 'complete' &&
+        result &&
+        result.poiList &&
+        result.poiList.pois &&
+        result.poiList.pois.length > 0
+      ) {
         const pois = result.poiList.pois
-        allData = pois
-
-        if(pois[0].location){
-          initMap([pois[0].location.lng, pois[0].location.lat])
-        }
-
+        const first = pois.find(p => p.location)
+        if (first) initMap([first.location.lng, first.location.lat])
         renderList(pois)
         renderMarkers(pois)
-        setStatus("找到 "+pois.length+" 个场地")
-      }else{
+        setStatus('共找到 ' + pois.length + ' 个场地')
+      } else {
         renderList([])
-        setStatus("未找到相关场地")
+        setStatus('未找到相关场地，请尝试其他关键词或城市')
       }
     }
 
-    if(options.location){
-      ps.searchNearBy("网球场",options.location,options.radius,callback)
-    }else{
-      ps.search("网球场",callback)
+    if (options.location) {
+      // 修复：第二个参数必须为 AMap.LngLat 对象，直接传数组在部分版本会失败
+      const center = new AMap.LngLat(options.location[0], options.location[1])
+      ps.searchNearBy('网球场', center, options.radius || 5000, callback)
+    } else {
+      ps.search('网球场', callback)
     }
   })
 }
 
-function renderList(data){
-  const box = document.getElementById("result")
-  if(!data.length){
-    box.innerHTML='<div class="empty">暂无数据</div>'
+function formatDistance(raw) {
+  const d = parseFloat(raw)  // 修复：distance 可能为字符串类型
+  if (isNaN(d) || d <= 0) return '—'
+  return d >= 1000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d) + ' m'
+}
+
+function renderList(data) {
+  const box = document.getElementById('result')
+
+  if (!data.length) {
+    box.innerHTML = '<div class="empty">😕 暂无数据</div>'
     return
   }
 
-  box.innerHTML = data.map((p,i)=>{
-    const dist = p.distance ? 
-      (p.distance>1000 ? (p.distance/1000).toFixed(1)+"km" : p.distance+"m")
-      : "—"
+  const header = '<div class="results-header">以下为搜索结果（点击「导航」跳转高德地图）</div>'
 
-    const lng = p.location ? p.location.lng : null
-    const lat = p.location ? p.location.lat : null
+  const items = data.map((p, i) => {
+    const name    = escHtml(p.name    || '未知场地')
+    const address = escHtml(p.address || '地址未知')
+    const dist    = formatDistance(p.distance)
+    const hasLoc  = p.location && p.location.lng && p.location.lat
+    const navBtn  = hasLoc
+      ? `<div class="nav-btn" onclick="nav(${p.location.lng},${p.location.lat},'${escHtml(p.name || '')}')">🗺 导航</div>`
+      : ''
 
     return `
-    <div class="card">
-      <strong>${i+1}. ${p.name}</strong><br/>
-      ${p.address || "地址未知"}<br/>
-      <span class="distance">${dist}</span><br/>
-      ${lng ? `<div class="nav-btn" onclick="nav(${lng},${lat},'${p.name.replace(/'/g,"")}')">导航</div>`:""}
-    </div>
-    `
-  }).join("")
+      <div class="card">
+        <strong>${i + 1}. ${name}</strong><br/>
+        <span class="addr">${address}</span><br/>
+        ${dist !== '—' ? `<span class="distance">📏 ${dist}</span><br/>` : ''}
+        ${navBtn}
+      </div>`
+  }).join('')
+
+  box.innerHTML = header + items
 }
 
-function renderMarkers(data){
-  if(!map) return
+function renderMarkers(data) {
+  if (!map) return
   clearMarkers()
 
-  data.forEach(p=>{
-    if(!p.location) return
+  data.forEach(p => {
+    if (!p.location) return
     const m = new AMap.Marker({
-      position:[p.location.lng,p.location.lat],
-      map:map
+      position: [p.location.lng, p.location.lat],
+      title: p.name || '',
+      map: map
     })
     markers.push(m)
   })
-  map.setFitView()
+
+  // 修复：传入 markers 数组，视图自适应所有标点
+  if (markers.length > 0) map.setFitView(markers)
 }
 
-function nav(lng,lat,name){
+function nav(lng, lat, name) {
   window.open(
     `https://uri.amap.com/navigation?to=${lng},${lat},${encodeURIComponent(name)}&mode=car`,
-    "_blank"
+    '_blank',
+    'noopener,noreferrer'  // 安全修复：防止新标签页访问 window.opener
   )
 }
 
-document.getElementById("cityInput").addEventListener("keydown",e=>{
-  if(e.key==="Enter") searchCity()
+document.getElementById('cityInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchCity()
 })
 </script>
 
