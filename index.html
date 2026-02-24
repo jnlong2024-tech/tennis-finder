@@ -1,292 +1,288 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>网球场地查找</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>网球场地搜索 | Tennis Court Finder</title>
 
-<!--
-  ╔══════════════════════════════════════════════════════════╗
-  ║   🔑 第一步：把下面的 YOUR_SECURITY_KEY                    ║
-  ║             替换成你的【安全密钥】                           ║
-  ╚══════════════════════════════════════════════════════════╝
--->
+<!-- e469d71b1acdcc134ef2e6ca1a94757d-->
 <script>
-  window._AMapSecurityConfig = {
-    securityJsCode: 'e469d71b1acdcc134ef2e6ca1a94757d',
-  }
+window._AMapSecurityConfig = {
+  securityJsCode: 'YOUR_SECURITY_CODE'
+}
 </script>
 
-<!--
-  ╔══════════════════════════════════════════════════════════╗
-  ║   🔑 第二步：把下面 key= 后面的 YOUR_API_KEY               ║
-  ║             替换成你的【API Key】                           ║
-  ╚══════════════════════════════════════════════════════════╝
--->
-<script src="https://webapi.amap.com/maps?v=2.0&key=78633132e896679bab70212f1aa966e6&plugin=AMap.PlaceSearch,AMap.Geolocation"></script>
+<!--78633132e896679bab70212f1aa966e6-->
+<script src="https://webapi.amap.com/maps?v=2.0&key=YOUR_API_KEY&plugin=AMap.PlaceSearch,AMap.Geolocation,AMap.CitySearch"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --clay: #C8A882;
-    --court-green: #2D5A3D;
-    --deep: #1A1A2E;
-    --cream: #F5EFE6;
-    --white: #FFFFFF;
-    --accent: #E8B84B;
-    --light-green: #4A7C5F;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: 'Noto Sans SC', sans-serif;
-    background: var(--deep);
-    color: var(--cream);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.015) 40px, rgba(255,255,255,0.015) 41px),
-      repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.015) 40px, rgba(255,255,255,0.015) 41px);
-    pointer-events: none;
-    z-index: 0;
-  }
-  .container { max-width: 900px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
-  header { padding: 50px 0 30px; text-align: center; }
-  .logo-line { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 12px; }
-  .logo-icon { width: 48px; height: 48px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-  h1 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 5vw, 3.2rem); color: var(--white); }
-  .subtitle { font-size: 0.95rem; color: var(--clay); font-weight: 300; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
-  .court-divider { margin: 24px auto; width: 200px; height: 2px; background: linear-gradient(90deg, transparent, var(--court-green), var(--accent), var(--court-green), transparent); }
-  .search-panel { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 32px; margin-bottom: 32px; backdrop-filter: blur(10px); }
-  .search-row { display: flex; gap: 12px; flex-wrap: wrap; }
-  .input-wrap { flex: 1; min-width: 200px; position: relative; }
-  .input-wrap input { width: 100%; padding: 14px 20px 14px 48px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: var(--white); font-family: 'Noto Sans SC', sans-serif; font-size: 0.95rem; outline: none; transition: all 0.3s; }
-  .input-wrap input::placeholder { color: rgba(255,255,255,0.35); }
-  .input-wrap input:focus { border-color: var(--accent); background: rgba(255,255,255,0.12); }
-  .input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 18px; pointer-events: none; }
-  .btn-locate, .btn-search { padding: 14px 28px; border: none; border-radius: 12px; font-family: 'Noto Sans SC', sans-serif; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.25s; white-space: nowrap; }
-  .btn-locate { background: var(--court-green); color: var(--white); }
-  .btn-locate:hover { background: var(--light-green); transform: translateY(-2px); }
-  .btn-search { background: var(--accent); color: var(--deep); }
-  .btn-search:hover { background: #f0cc6a; transform: translateY(-2px); }
-  .status-bar { text-align: center; padding: 12px; font-size: 0.85rem; color: var(--clay); min-height: 40px; transition: all 0.3s; }
-  .status-bar.loading { color: var(--accent); }
-  .status-bar.error { color: #E87070; }
-  .status-bar.success { color: #7DC897; }
-  #mapContainer { width: 100%; height: 300px; border-radius: 16px; overflow: hidden; margin-bottom: 32px; border: 1px solid rgba(255,255,255,0.08); }
-  .filter-row { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
-  .filter-btn { padding: 8px 18px; border-radius: 100px; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: rgba(255,255,255,0.6); font-family: 'Noto Sans SC', sans-serif; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; }
-  .filter-btn.active, .filter-btn:hover { background: var(--court-green); border-color: var(--court-green); color: var(--white); }
-  .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-  .results-count { font-size: 0.85rem; color: var(--clay); }
-  .results-count strong { color: var(--accent); font-size: 1.1rem; }
-  .court-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px; margin-bottom: 16px; display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: start; transition: all 0.3s; animation: slideIn 0.4s ease backwards; }
-  .court-card:hover { background: rgba(255,255,255,0.08); border-color: rgba(200,168,130,0.3); transform: translateX(4px); }
-  @keyframes slideIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-  .court-rank { width: 40px; height: 40px; background: linear-gradient(135deg, var(--court-green), var(--light-green)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--white); flex-shrink: 0; }
-  .court-info h3 { font-size: 1.05rem; font-weight: 500; color: var(--white); margin-bottom: 6px; }
-  .court-addr { font-size: 0.82rem; color: rgba(255,255,255,0.45); margin-bottom: 10px; line-height: 1.5; }
-  .court-tags { display: flex; gap: 8px; flex-wrap: wrap; }
-  .tag { padding: 3px 10px; border-radius: 100px; font-size: 0.75rem; font-weight: 300; }
-  .tag-type { background: rgba(200,168,130,0.15); color: var(--clay); border: 1px solid rgba(200,168,130,0.2); }
-  .tag-tel { background: rgba(74,124,95,0.2); color: #7DC897; border: 1px solid rgba(74,124,95,0.3); }
-  .court-meta { text-align: right; flex-shrink: 0; }
-  .distance { font-size: 1.1rem; font-weight: 500; color: var(--accent); margin-bottom: 4px; }
-  .rating { font-size: 0.8rem; color: rgba(255,255,255,0.4); }
-  .stars { color: var(--accent); }
-  .btn-nav { display: inline-block; margin-top: 8px; padding: 5px 12px; background: rgba(232,184,75,0.15); border: 1px solid rgba(232,184,75,0.3); border-radius: 8px; color: var(--accent); font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
-  .btn-nav:hover { background: rgba(232,184,75,0.25); }
-  .empty-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.25); }
-  .empty-state .emoji { font-size: 48px; margin-bottom: 16px; }
-  .empty-state p { font-size: 0.9rem; line-height: 1.8; }
-  footer { text-align: center; padding: 40px 0; font-size: 0.78rem; color: rgba(255,255,255,0.2); }
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+  background:#0f172a;
+  color:#fff;
+}
+.container{
+  max-width:900px;
+  margin:0 auto;
+  padding:20px;
+}
+h1{
+  text-align:center;
+  margin:30px 0 10px;
+}
+.search-box{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+input{
+  flex:1;
+  padding:12px;
+  border-radius:8px;
+  border:none;
+}
+button{
+  padding:12px 20px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+.locate{background:#2563eb;color:#fff;}
+.search{background:#f59e0b;color:#000;}
+.status{
+  margin:10px 0;
+  font-size:14px;
+  opacity:0.8;
+}
+#map{
+  width:100%;
+  height:300px;
+  border-radius:12px;
+  margin:20px 0;
+}
+.card{
+  background:#1e293b;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:12px;
+}
+.distance{
+  color:#f59e0b;
+  font-weight:bold;
+}
+.nav-btn{
+  margin-top:8px;
+  display:inline-block;
+  padding:6px 10px;
+  background:#334155;
+  border-radius:6px;
+  cursor:pointer;
+}
+.empty{
+  text-align:center;
+  opacity:0.5;
+  padding:40px 0;
+}
 </style>
 </head>
+
 <body>
 <div class="container">
-  <header>
-    <div class="logo-line">
-      <div class="logo-icon">🎾</div>
-      <h1>网球场地搜索</h1>
-    </div>
-    <p class="subtitle">TENNIS COURT FINDER</p>
-    <div class="court-divider"></div>
-  </header>
 
-  <div class="search-panel">
-    <div class="search-row">
-      <div class="input-wrap">
-        <span class="input-icon">📍</span>
-        <input type="text" id="locationInput" placeholder="输入城市或地区，例如：北京朝阳区" />
-      </div>
-      <button class="btn-locate" onclick="getMyLocation()">📡 定位我的位置</button>
-      <button class="btn-search" onclick="searchByCity()">搜索场地</button>
-    </div>
-    <div class="status-bar" id="statusBar">请输入地址或点击"定位我的位置"开始搜索</div>
-  </div>
+<h1>🎾 网球场地搜索</h1>
 
-  <div id="mapContainer"></div>
+<div class="search-box">
+  <input id="cityInput" placeholder="输入城市，例如：北京" />
+  <button class="locate" onclick="getLocation()">📍 自动定位</button>
+  <button class="search" onclick="searchCity()">搜索</button>
+</div>
 
-  <div class="filter-row" id="filterRow" style="display:none">
-    <button class="filter-btn active" onclick="filterCourts('all', this)">全部</button>
-    <button class="filter-btn" onclick="filterCourts('室内', this)">🏠 室内场</button>
-    <button class="filter-btn" onclick="filterCourts('室外', this)">☀️ 室外场</button>
-    <button class="filter-btn" onclick="filterCourts('俱乐部', this)">🏆 俱乐部</button>
-    <button class="filter-btn" onclick="filterCourts('公园', this)">🌳 公共场地</button>
-  </div>
+<div id="status" class="status">
+  请输入城市或点击自动定位
+</div>
 
-  <div id="resultsSection">
-    <div class="empty-state">
-      <div class="emoji">🎾</div>
-      <p>点击"定位我的位置"<br>或输入地址后搜索<br>即可找到附近真实的网球场地</p>
-    </div>
-  </div>
+<div id="map"></div>
 
-  <footer>Tennis Court Finder · 数据来源：高德地图</footer>
+<div id="result">
+  <div class="empty">暂无数据</div>
+</div>
+
 </div>
 
 <script>
-let map = null, allCourts = [], markers = [];
+let map = null
+let markers = []
+let allData = []
 
-function setStatus(msg, type) {
-  const el = document.getElementById('statusBar');
-  el.className = 'status-bar ' + (type || '');
-  el.textContent = msg;
+function setStatus(msg){
+  document.getElementById("status").innerText = msg
 }
 
-function initMap(center) {
-  if (map) { map.setCenter(center); return; }
-  map = new AMap.Map('mapContainer', { zoom: 13, center: center, mapStyle: 'amap://styles/dark' });
-  new AMap.Marker({
-    position: center, map: map,
-    content: '<div style="background:#E8B84B;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 0 0 6px rgba(232,184,75,0.3)"></div>',
-    offset: new AMap.Pixel(-7, -7)
-  });
-}
-
-function clearMarkers() { markers.forEach(m => m.setMap(null)); markers = []; }
-
-function getMyLocation() {
-  setStatus('📡 正在获取您的位置...', 'loading');
-  AMap.plugin('AMap.Geolocation', function() {
-    const geo = new AMap.Geolocation({ enableHighAccuracy: true, timeout: 10000 });
-    geo.getCurrentPosition(function(err, result) {
-      if (err) { setStatus('❌ 定位失败，请手动输入城市后搜索', 'error'); return; }
-      const lng = result.position.getLng(), lat = result.position.getLat();
-      const city = result.addressComponent.city || result.addressComponent.province;
-      document.getElementById('locationInput').value = city;
-      setStatus('✅ 定位成功：' + city, 'success');
-      initMap([lng, lat]);
-      doSearch(null, [lng, lat], 5000);
-    });
-  });
-}
-
-function searchByCity() {
-  const city = document.getElementById('locationInput').value.trim();
-  if (!city) { setStatus('⚠️ 请先输入城市或地址', 'error'); return; }
-  setStatus('🔍 正在搜索"' + city + '"附近的网球场地...', 'loading');
-  doSearch(city, null, null);
-}
-
-function doSearch(city, location, radius) {
-  AMap.plugin('AMap.PlaceSearch', function() {
-    const opts = { pageSize: 20, pageIndex: 1 };
-    if (city) opts.city = city;
-    const ps = new AMap.PlaceSearch(opts);
-
-    const callback = function(status, result) {
-      if (status === 'complete' && result.poiList && result.poiList.pois.length > 0) {
-        const pois = result.poiList.pois;
-        const first = pois[0].location;
-        if (first) initMap([first.getLng(), first.getLat()]);
-        showResults(pois);
-      } else {
-        setStatus('❌ 未找到相关场地，请尝试其他城市名称', 'error');
-      }
-    };
-
-    if (location) {
-      ps.searchNearBy('网球场', location, radius, callback);
-    } else {
-      ps.search('网球场', callback);
-    }
-  });
-}
-
-function showResults(pois) {
-  allCourts = pois;
-  setStatus('✅ 找到 ' + pois.length + ' 个网球场地', 'success');
-  document.getElementById('filterRow').style.display = 'flex';
-  renderCourts(pois);
-  addMapMarkers(pois);
-}
-
-function renderCourts(pois) {
-  const section = document.getElementById('resultsSection');
-  if (!pois || pois.length === 0) {
-    section.innerHTML = '<div class="empty-state"><div class="emoji">🔍</div><p>当前筛选下暂无场地</p></div>';
-    return;
+function initMap(center){
+  if(!map){
+    map = new AMap.Map('map',{
+      zoom:13,
+      center:center,
+      mapStyle:'amap://styles/dark'
+    })
+  }else{
+    map.setCenter(center)
   }
-  section.innerHTML = `
-    <div class="results-header"><div class="results-count">共找到 <strong>${pois.length}</strong> 个场地</div></div>
-    ${pois.map((poi, i) => {
-      const dist = poi.distance ? (poi.distance >= 1000 ? (poi.distance/1000).toFixed(1)+'km' : poi.distance+'m') : '—';
-      const tel = poi.tel ? `<span class="tag tag-tel">📞 ${poi.tel}</span>` : '';
-      const type = poi.type ? `<span class="tag tag-type">${poi.type.split(';')[0]}</span>` : '';
-      const rating = poi.biz_ext && poi.biz_ext.rating ? poi.biz_ext.rating : '—';
-      const lng = poi.location ? poi.location.getLng() : null;
-      const lat = poi.location ? poi.location.getLat() : null;
-      const navBtn = lng ? `<div class="btn-nav" onclick="navigate(${lng},${lat},'${poi.name.replace(/'/g,'')}')">🗺 导航</div>` : '';
-      return `
-        <div class="court-card" style="animation-delay:${i*0.06}s">
-          <div class="court-rank">${i+1}</div>
-          <div class="court-info">
-            <h3>${poi.name}</h3>
-            <div class="court-addr">📍 ${poi.address || '地址未知'}</div>
-            <div class="court-tags">${type}${tel}</div>
-          </div>
-          <div class="court-meta">
-            <div class="distance">${dist}</div>
-            <div class="rating"><span class="stars">★</span> ${rating}</div>
-            ${navBtn}
-          </div>
-        </div>`;
-    }).join('')}`;
 }
 
-function addMapMarkers(pois) {
-  if (!map) return;
-  clearMarkers();
-  pois.forEach(poi => {
-    if (!poi.location) return;
+function clearMarkers(){
+  markers.forEach(m=>m.setMap(null))
+  markers=[]
+}
+
+function getLocation(){
+  setStatus("正在获取GPS定位...")
+
+  AMap.plugin('AMap.Geolocation',function(){
+    const geo = new AMap.Geolocation({
+      enableHighAccuracy:true,
+      timeout:8000
+    })
+
+    geo.getCurrentPosition(function(status,result){
+      if(status==="complete"){
+        const lng = result.position.lng
+        const lat = result.position.lat
+        const city = result.addressComponent.city || result.addressComponent.province
+
+        document.getElementById("cityInput").value = city
+        setStatus("GPS定位成功："+city)
+
+        initMap([lng,lat])
+        searchNearby([lng,lat])
+      }else{
+        console.warn("GPS失败，启用IP定位",result)
+        ipLocate()
+      }
+    })
+  })
+}
+
+function ipLocate(){
+  setStatus("GPS失败，尝试IP定位...")
+
+  AMap.plugin('AMap.CitySearch',function(){
+    const cs = new AMap.CitySearch()
+    cs.getLocalCity(function(status,result){
+      if(status==="complete" && result.city){
+        document.getElementById("cityInput").value = result.city
+        setStatus("IP定位成功："+result.city)
+        searchCity()
+      }else{
+        setStatus("定位失败，请手动输入城市")
+      }
+    })
+  })
+}
+
+function searchCity(){
+  const city = document.getElementById("cityInput").value.trim()
+  if(!city){
+    setStatus("请输入城市")
+    return
+  }
+  setStatus("正在搜索 "+city+" 的网球场...")
+  doSearch({city:city})
+}
+
+function searchNearby(center){
+  setStatus("正在搜索附近网球场...")
+  doSearch({location:center,radius:5000})
+}
+
+function doSearch(options){
+  AMap.plugin('AMap.PlaceSearch',function(){
+
+    const ps = new AMap.PlaceSearch({
+      pageSize:20,
+      pageIndex:1,
+      city:options.city || ""
+    })
+
+    const callback = function(status,result){
+      if(status==="complete" && result.poiList && result.poiList.pois.length>0){
+        const pois = result.poiList.pois
+        allData = pois
+
+        if(pois[0].location){
+          initMap([pois[0].location.lng, pois[0].location.lat])
+        }
+
+        renderList(pois)
+        renderMarkers(pois)
+        setStatus("找到 "+pois.length+" 个场地")
+      }else{
+        renderList([])
+        setStatus("未找到相关场地")
+      }
+    }
+
+    if(options.location){
+      ps.searchNearBy("网球场",options.location,options.radius,callback)
+    }else{
+      ps.search("网球场",callback)
+    }
+  })
+}
+
+function renderList(data){
+  const box = document.getElementById("result")
+  if(!data.length){
+    box.innerHTML='<div class="empty">暂无数据</div>'
+    return
+  }
+
+  box.innerHTML = data.map((p,i)=>{
+    const dist = p.distance ? 
+      (p.distance>1000 ? (p.distance/1000).toFixed(1)+"km" : p.distance+"m")
+      : "—"
+
+    const lng = p.location ? p.location.lng : null
+    const lat = p.location ? p.location.lat : null
+
+    return `
+    <div class="card">
+      <strong>${i+1}. ${p.name}</strong><br/>
+      ${p.address || "地址未知"}<br/>
+      <span class="distance">${dist}</span><br/>
+      ${lng ? `<div class="nav-btn" onclick="nav(${lng},${lat},'${p.name.replace(/'/g,"")}')">导航</div>`:""}
+    </div>
+    `
+  }).join("")
+}
+
+function renderMarkers(data){
+  if(!map) return
+  clearMarkers()
+
+  data.forEach(p=>{
+    if(!p.location) return
     const m = new AMap.Marker({
-      position: [poi.location.getLng(), poi.location.getLat()],
-      map: map,
-      label: { content: `<div style="background:#2D5A3D;color:white;padding:2px 8px;border-radius:6px;font-size:12px;white-space:nowrap">${poi.name}</div>`, offset: new AMap.Pixel(0, -30) }
-    });
-    markers.push(m);
-  });
-  map.setFitView();
+      position:[p.location.lng,p.location.lat],
+      map:map
+    })
+    markers.push(m)
+  })
+  map.setFitView()
 }
 
-function filterCourts(keyword, btn) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const filtered = keyword === 'all' ? allCourts : allCourts.filter(p => (p.name+(p.type||'')+(p.address||'')).includes(keyword));
-  renderCourts(filtered);
-  addMapMarkers(filtered);
+function nav(lng,lat,name){
+  window.open(
+    `https://uri.amap.com/navigation?to=${lng},${lat},${encodeURIComponent(name)}&mode=car`,
+    "_blank"
+  )
 }
 
-function navigate(lng, lat, name) {
-  window.open(`https://uri.amap.com/navigation?to=${lng},${lat},${encodeURIComponent(name)}&mode=car&src=myapp&coordinate=gaode&callnative=1`, '_blank');
-}
-
-document.getElementById('locationInput').addEventListener('keydown', e => { if (e.key === 'Enter') searchByCity(); });
+document.getElementById("cityInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter") searchCity()
+})
 </script>
+
 </body>
 </html>
