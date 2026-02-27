@@ -3,136 +3,398 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>网球场地搜索 | Tennis Court Finder</title>
+<title>网球场地搜索</title>
+<meta property="og:title" content="网球场地搜索" />
+<meta property="og:description" content="快速找到附近网球场地，支持GPS定位与城市搜索" />
+<meta name="description" content="快速找到附近网球场地，支持GPS定位与城市搜索" />
 
-<!--
-  ⚠️ 使用前请替换以下两处：
-  1. YOUR_SECURITY_CODE → 你的高德安全密钥
-  2. YOUR_API_KEY       → 你的高德 JS API Key
--->
 <script>
 window._AMapSecurityConfig = {
   securityJsCode: 'e469d71b1acdcc134ef2e6ca1a94757d'
 }
 </script>
 <script src="https://webapi.amap.com/maps?v=2.0&key=78633132e896679bab70212f1aa966e6&plugin=AMap.PlaceSearch,AMap.Geolocation,AMap.CitySearch"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
-  *, *::before, *::after { box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #080d14;
+    --surface:   #0f1923;
+    --surface2:  #162032;
+    --border:    #1e3048;
+    --accent:    #c8f000;
+    --accent2:   #00c8a0;
+    --text:      #e8f0fe;
+    --muted:     #4a6080;
+    --danger:    #ff6b6b;
+  }
+
+  html { scroll-behavior: smooth; }
 
   body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, sans-serif;
-    background: #0f172a;
-    color: #fff;
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── 背景纹理 ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(200,240,0,0.07) 0%, transparent 60%),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 39px,
+        rgba(255,255,255,0.015) 39px,
+        rgba(255,255,255,0.015) 40px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 39px,
+        rgba(255,255,255,0.015) 39px,
+        rgba(255,255,255,0.015) 40px
+      );
+    pointer-events: none;
+    z-index: 0;
   }
 
   .container {
-    max-width: 900px;
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 28px 20px 60px;
+  }
+
+  /* ── 头部 ── */
+  header {
+    text-align: center;
+    margin-bottom: 36px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .logo-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 6px;
+  }
+
+  .logo-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+    box-shadow: 0 0 24px rgba(200,240,0,0.35);
   }
 
   h1 {
-    text-align: center;
-    margin: 30px 0 20px;
-    font-size: 1.8rem;
-    letter-spacing: 2px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 8vw, 3.2rem);
+    letter-spacing: 4px;
+    color: var(--text);
+    line-height: 1;
   }
 
-  .search-box {
+  .subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* ── 搜索区 ── */
+  .search-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+
+  .search-row {
     display: flex;
     gap: 10px;
-    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  .input-wrap {
+    flex: 1;
+    position: relative;
+  }
+
+  .input-wrap svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
   }
 
   input {
-    flex: 1;
-    min-width: 160px;
-    padding: 12px 16px;
-    border-radius: 8px;
-    border: 1px solid #334155;
-    background: #1e293b;
-    color: #fff;
+    width: 100%;
+    padding: 13px 16px 13px 42px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
     font-size: 15px;
+    font-family: 'Noto Sans SC', sans-serif;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
-  input:focus { border-color: #f59e0b; }
-  input::placeholder { color: #64748b; }
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(200,240,0,0.1);
+  }
+  input::placeholder { color: var(--muted); }
+
+  .btn-group {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
 
   button {
-    padding: 12px 20px;
+    padding: 0 18px;
+    height: 48px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     font-size: 14px;
-    font-weight: 600;
-    transition: opacity 0.2s, transform 0.1s;
+    font-weight: 700;
+    font-family: 'Noto Sans SC', sans-serif;
+    transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
-  button:hover  { opacity: 0.85; }
-  button:active { transform: scale(0.97); }
+  button:hover:not(:disabled)  { opacity: 0.88; transform: translateY(-1px); }
+  button:active:not(:disabled) { transform: scale(0.97) translateY(0); }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
 
-  .btn-locate { background: #2563eb; color: #fff; }
-  .btn-search { background: #f59e0b; color: #000; }
+  .btn-locate {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+  .btn-locate:hover:not(:disabled) {
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
 
-  .status {
-    margin: 12px 0 4px;
+  .btn-search {
+    background: var(--accent);
+    color: #000;
+    min-width: 88px;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(200,240,0,0.25);
+  }
+  .btn-search:hover:not(:disabled) {
+    box-shadow: 0 6px 24px rgba(200,240,0,0.4);
+  }
+
+  /* ── 状态栏 ── */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
     font-size: 13px;
-    color: #94a3b8;
-    min-height: 18px;
+    color: var(--muted);
+    min-height: 20px;
   }
 
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .status-dot.active { background: var(--accent); animation: pulse 1.2s infinite; }
+  .status-dot.success { background: var(--accent2); }
+  .status-dot.error { background: var(--danger); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(0.7); }
+  }
+
+  /* ── 地图 ── */
   #map {
     width: 100%;
-    height: 320px;
-    border-radius: 12px;
+    height: clamp(220px, 40vw, 360px);
+    border-radius: 14px;
     margin: 16px 0;
-    background: #1e293b;
+    background: var(--surface);
     overflow: hidden;
+    border: 1px solid var(--border);
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  /* ── 结果列表 ── */
+  .results-header {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .results-header span {
+    color: var(--accent);
+    font-weight: 700;
   }
 
   .card {
-    background: #1e293b;
-    padding: 16px;
-    border-radius: 12px;
-    margin-bottom: 12px;
-    border: 1px solid #334155;
-    line-height: 1.8;
+    background: var(--surface);
+    padding: 18px 20px;
+    border-radius: 14px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    animation: fadeUp 0.4s ease both;
   }
-  .card strong { font-size: 15px; }
-  .card .addr  { color: #94a3b8; font-size: 13px; }
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateX(3px);
+    box-shadow: -4px 0 20px rgba(200,240,0,0.08);
+  }
 
-  .distance {
-    color: #f59e0b;
-    font-weight: bold;
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+
+  .card-name {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--text);
+  }
+
+  .card-index {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--border);
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .card-addr {
+    color: var(--muted);
     font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .distance-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    background: rgba(200,240,0,0.08);
+    border: 1px solid rgba(200,240,0,0.2);
+    border-radius: 20px;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
   }
 
   .nav-btn {
-    display: inline-block;
-    margin-top: 10px;
-    padding: 6px 14px;
-    background: #334155;
-    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
     cursor: pointer;
     font-size: 13px;
-    transition: background 0.2s;
+    font-weight: 600;
+    color: var(--text);
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
   }
-  .nav-btn:hover { background: #475569; }
+  .nav-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+  }
 
+  /* ── 空状态 ── */
   .empty {
     text-align: center;
-    color: #475569;
-    padding: 50px 0;
-    font-size: 15px;
+    padding: 60px 20px;
+    animation: fadeUp 0.4s ease both;
   }
 
-  .results-header {
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  .empty-title {
+    font-size: 16px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .empty-hint {
     font-size: 13px;
-    color: #64748b;
-    margin-bottom: 10px;
+    color: var(--border);
+  }
+
+  /* ── 动画 ── */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── 响应式 ── */
+  @media (max-width: 520px) {
+    .search-row { flex-direction: column; }
+    .btn-group  { flex-direction: row; }
+    .btn-locate, .btn-search { flex: 1; justify-content: center; }
+    h1 { font-size: 2.2rem; }
   }
 </style>
 </head>
@@ -140,19 +402,47 @@ window._AMapSecurityConfig = {
 <body>
 <div class="container">
 
-  <h1>🎾 网球场地搜索</h1>
+  <header>
+    <div class="logo-line">
+      <div class="logo-icon">🎾</div>
+      <h1>网球场地搜索</h1>
+    </div>
+    <div class="subtitle">Tennis Court Finder · 数据来源：高德地图</div>
+  </header>
 
-  <div class="search-box">
-    <input id="cityInput" placeholder="输入城市，例如：北京" />
-    <button class="btn-locate" onclick="getLocation()">📍 自动定位</button>
-    <button class="btn-search" onclick="searchCity()">搜索</button>
+  <div class="search-wrap">
+    <div class="search-row">
+      <div class="input-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input id="cityInput" placeholder="输入城市，例如：北京、上海" />
+      </div>
+      <div class="btn-group">
+        <button class="btn-locate" onclick="getLocation()" id="btnLocate">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+          </svg>
+          定位
+        </button>
+        <button class="btn-search" onclick="searchCity()" id="btnSearch">搜索</button>
+      </div>
+    </div>
+    <div class="status-bar">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="status">输入城市或点击定位，即可找到附近网球场</span>
+    </div>
   </div>
-
-  <div id="status" class="status">请输入城市或点击自动定位</div>
 
   <div id="map"></div>
 
-  <div id="result"><div class="empty">暂无数据</div></div>
+  <div id="result">
+    <div class="empty">
+      <div class="empty-icon">🎾</div>
+      <div class="empty-title">还没有搜索结果</div>
+      <div class="empty-hint">输入城市名称或点击「定位」按钮开始搜索</div>
+    </div>
+  </div>
 
 </div>
 
@@ -160,7 +450,6 @@ window._AMapSecurityConfig = {
 let map = null
 let markers = []
 
-// HTML 转义，防 XSS
 function escHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -170,8 +459,21 @@ function escHtml(str) {
     .replace(/'/g, '&#39;')
 }
 
-function setStatus(msg) {
+function setStatus(msg, type = 'idle') {
   document.getElementById('status').textContent = msg
+  const dot = document.getElementById('statusDot')
+  dot.className = 'status-dot'
+  if (type === 'loading') dot.classList.add('active')
+  else if (type === 'success') dot.classList.add('success')
+  else if (type === 'error') dot.classList.add('error')
+}
+
+function setLoading(on) {
+  const btn = document.getElementById('btnSearch')
+  const loc = document.getElementById('btnLocate')
+  btn.disabled = on
+  loc.disabled = on
+  btn.textContent = on ? '搜索中…' : '搜索'
 }
 
 function initMap(center) {
@@ -193,26 +495,21 @@ function clearMarkers() {
 }
 
 function getLocation() {
-  setStatus('正在获取 GPS 定位…')
+  setStatus('正在获取 GPS 定位…', 'loading')
+  setLoading(true)
 
   AMap.plugin('AMap.Geolocation', function () {
-    const geo = new AMap.Geolocation({
-      enableHighAccuracy: true,
-      timeout: 8000
-    })
-
+    const geo = new AMap.Geolocation({ enableHighAccuracy: true, timeout: 8000 })
     geo.getCurrentPosition(function (status, result) {
       if (status === 'complete') {
         const lng = result.position.lng
         const lat = result.position.lat
-        // 直辖市 city 字段为空，降级取 province
         const city = (result.addressComponent && (result.addressComponent.city || result.addressComponent.province)) || ''
         document.getElementById('cityInput').value = city
-        setStatus('GPS 定位成功：' + city)
+        setStatus('GPS 定位成功：' + city, 'success')
         initMap([lng, lat])
         searchNearby([lng, lat])
       } else {
-        console.warn('GPS 失败，启用 IP 定位', result)
         ipLocate()
       }
     })
@@ -220,17 +517,17 @@ function getLocation() {
 }
 
 function ipLocate() {
-  setStatus('GPS 失败，尝试 IP 定位…')
-
+  setStatus('GPS 失败，尝试 IP 定位…', 'loading')
   AMap.plugin('AMap.CitySearch', function () {
     const cs = new AMap.CitySearch()
     cs.getLocalCity(function (status, result) {
       if (status === 'complete' && result && result.city) {
         document.getElementById('cityInput').value = result.city
-        setStatus('IP 定位成功：' + result.city)
+        setStatus('IP 定位成功：' + result.city, 'success')
         searchCity()
       } else {
-        setStatus('定位失败，请手动输入城市后搜索')
+        setStatus('定位失败，请手动输入城市后搜索', 'error')
+        setLoading(false)
       }
     })
   })
@@ -239,31 +536,31 @@ function ipLocate() {
 function searchCity() {
   const city = document.getElementById('cityInput').value.trim()
   if (!city) {
-    setStatus('请输入城市名')
+    setStatus('请输入城市名', 'error')
     return
   }
-  setStatus('正在搜索「' + city + '」的网球场…')
+  setLoading(true)
+  setStatus('正在搜索「' + city + '」的网球场…', 'loading')
   doSearch({ city: city })
 }
 
 function searchNearby(center) {
-  setStatus('正在搜索附近网球场…')
+  setStatus('正在搜索附近网球场…', 'loading')
   doSearch({ location: center, radius: 5000 })
 }
 
 function doSearch(options) {
   AMap.plugin('AMap.PlaceSearch', function () {
     const psOptions = { pageSize: 20, pageIndex: 1 }
-    // 按城市搜索时才传 city，避免附近搜索被城市范围限制
     if (options.city) psOptions.city = options.city
 
     const ps = new AMap.PlaceSearch(psOptions)
 
     const callback = function (status, result) {
+      setLoading(false)
       if (
         status === 'complete' &&
-        result &&
-        result.poiList &&
+        result && result.poiList &&
         result.poiList.pois &&
         result.poiList.pois.length > 0
       ) {
@@ -272,15 +569,14 @@ function doSearch(options) {
         if (first) initMap([first.location.lng, first.location.lat])
         renderList(pois)
         renderMarkers(pois)
-        setStatus('共找到 ' + pois.length + ' 个场地')
+        setStatus('共找到 ' + pois.length + ' 个场地', 'success')
       } else {
         renderList([])
-        setStatus('未找到相关场地，请尝试其他关键词或城市')
+        setStatus('未找到相关场地，请尝试其他城市', 'error')
       }
     }
 
     if (options.location) {
-      // 修复：第二个参数必须为 AMap.LngLat 对象，直接传数组在部分版本会失败
       const center = new AMap.LngLat(options.location[0], options.location[1])
       ps.searchNearBy('网球场', center, options.radius || 5000, callback)
     } else {
@@ -290,8 +586,8 @@ function doSearch(options) {
 }
 
 function formatDistance(raw) {
-  const d = parseFloat(raw)  // 修复：distance 可能为字符串类型
-  if (isNaN(d) || d <= 0) return '—'
+  const d = parseFloat(raw)
+  if (isNaN(d) || d <= 0) return null
   return d >= 1000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d) + ' m'
 }
 
@@ -299,27 +595,47 @@ function renderList(data) {
   const box = document.getElementById('result')
 
   if (!data.length) {
-    box.innerHTML = '<div class="empty">😕 暂无数据</div>'
+    box.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">😕</div>
+        <div class="empty-title">暂无搜索结果</div>
+        <div class="empty-hint">请尝试其他城市或关键词</div>
+      </div>`
     return
   }
 
-  const header = '<div class="results-header">以下为搜索结果（点击「导航」跳转高德地图）</div>'
+  const header = `<div class="results-header">找到 <span>${data.length}</span> 个场地 · 点击「导航」跳转高德地图</div>`
 
   const items = data.map((p, i) => {
     const name    = escHtml(p.name    || '未知场地')
     const address = escHtml(p.address || '地址未知')
     const dist    = formatDistance(p.distance)
     const hasLoc  = p.location && p.location.lng && p.location.lat
-    const navBtn  = hasLoc
-      ? `<div class="nav-btn" onclick="nav(${p.location.lng},${p.location.lat},'${escHtml(p.name || '')}')">🗺 导航</div>`
+
+    const distTag = dist
+      ? `<span class="distance-tag">📏 ${dist}</span>`
+      : ''
+
+    const navBtn = hasLoc
+      ? `<div class="nav-btn" onclick="nav(${p.location.lng},${p.location.lat},'${escHtml(p.name || '')}')">
+           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+             <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+           </svg>
+           高德导航
+         </div>`
       : ''
 
     return `
-      <div class="card">
-        <strong>${i + 1}. ${name}</strong><br/>
-        <span class="addr">${address}</span><br/>
-        ${dist !== '—' ? `<span class="distance">📏 ${dist}</span><br/>` : ''}
-        ${navBtn}
+      <div class="card" style="animation-delay:${i * 0.04}s">
+        <div class="card-top">
+          <div class="card-name">${name}</div>
+          <div class="card-index">${String(i + 1).padStart(2, '0')}</div>
+        </div>
+        <div class="card-addr">${address}</div>
+        <div class="card-footer">
+          ${distTag}
+          ${navBtn}
+        </div>
       </div>`
   }).join('')
 
@@ -329,7 +645,6 @@ function renderList(data) {
 function renderMarkers(data) {
   if (!map) return
   clearMarkers()
-
   data.forEach(p => {
     if (!p.location) return
     const m = new AMap.Marker({
@@ -339,8 +654,6 @@ function renderMarkers(data) {
     })
     markers.push(m)
   })
-
-  // 修复：传入 markers 数组，视图自适应所有标点
   if (markers.length > 0) map.setFitView(markers)
 }
 
@@ -348,7 +661,7 @@ function nav(lng, lat, name) {
   window.open(
     `https://uri.amap.com/navigation?to=${lng},${lat},${encodeURIComponent(name)}&mode=car`,
     '_blank',
-    'noopener,noreferrer'  // 安全修复：防止新标签页访问 window.opener
+    'noopener,noreferrer'
   )
 }
 
